@@ -1,0 +1,13 @@
+services:
+  user_service:
+    build:
+      context: .
+      dockerfile: Dockerfile.user_service
+    ports:
+      - "8000:8000"
+  goal_service:
+    build:
+      context: .
+      dockerfile: Dockerfile.goal_service
+    ports:
+      - "8001:8001"
