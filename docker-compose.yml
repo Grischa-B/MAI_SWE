@@ -1,13 +1,29 @@
 services:
+  db:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
   user_service:
     build:
       context: .
       dockerfile: Dockerfile.user_service
     ports:
       - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
   goal_service:
     build:
       context: .
       dockerfile: Dockerfile.goal_service
     ports:
       - "8001:8001"
+volumes:
+  postgres_data:
