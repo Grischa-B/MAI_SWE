@@ -1,25 +1,20 @@
 workspace "TaskPlanning" {
     model {
-        // Пользователь системы
         user = person "User" "Системный пользователь"
 
-        // Основная система
-        system = softwareSystem "TaskPlanner" "Система управления целями, задачами и пользователями" {
-            webUI = container "WebUI" "Веб-интерфейс для взаимодействия с системой" "React"
-            userService = container "UserService" "REST API для управления пользователями с JWT аутентификацией и PostgreSQL" "FastAPI"
-            goalService = container "GoalService" "REST API для управления целями с JWT аутентификацией" "FastAPI"
-            postgresDB = container "PostgresDB" "Постоянное хранилище данных" "PostgreSQL 14"
+        system = softwareSystem "TaskPlanner" "Управление целями и задачами" {
+            webUI = container "WebUI" "React-интерфейс" "React"
+            userService = container "UserService" "REST API пользователей" "FastAPI + PostgreSQL"
+            goalService = container "GoalService" "REST API целей/задач" "FastAPI + MongoDB"
+            postgresDB = container "PostgresDB" "Хранилище пользователей" "PostgreSQL 14"
+            mongoDB    = container "MongoDB" "Хранилище целей/задач" "MongoDB 5.0"
         }
 
-        // Внешняя система аутентификации
-        authentication = softwareSystem "Authentication" "Сервис аутентификации JWT"
-
-        user -> webUI "Использует" 
-        webUI -> userService "Вызов API пользователей" "HTTPS/JSON"
-        webUI -> goalService "Вызов API целей" "HTTPS/JSON"
-        userService -> postgresDB "Читает/Записывает данные" "SQL"
-        goalService -> postgresDB "Читает/Записывает данные" "SQL"
-        webUI -> authentication "Запрос аутентификации" "HTTPS/JSON"
+        user -> webUI "Использует"
+        webUI -> userService "API пользователей" "HTTPS/JSON"
+        webUI -> goalService "API целей/задач" "HTTPS/JSON"
+        userService -> postgresDB "CRUD пользователей" "SQL"
+        goalService -> mongoDB "CRUD целей/задач" "MongoDB Driver"
     }
 
     views {
@@ -31,12 +26,12 @@ workspace "TaskPlanning" {
             include *
             autolayout lr
         }
-        dynamic system "goal_creation" {
-            user -> webUI "Отправляет запрос на создание цели"
-            webUI -> goalService "Вызов API для создания цели"
-            goalService -> postgresDB "Сохраняет цель"
-            goalService -> webUI "Возвращает подтверждение"
-            webUI -> user "Отображает результат"
+        dynamic system "goal_crud" {
+            user -> webUI "Создать цель"
+            webUI -> goalService "POST /goals"
+            goalService -> mongoDB "insertOne"
+            goalService -> webUI "200 OK"
+            webUI -> user "Показывает результат"
         }
         theme default
     }
